@@ -1,0 +1,16 @@
+server:
+  host:
+  timeout: 5
+  headers:
+    - X-Requested-With
+    - Content-Type
+  methods:
+    - GET
+    - POST
+    - DELETE
+    - PUT
+    - HEAD
+    - OPTIONS
+
+auth_service:
+    host:
