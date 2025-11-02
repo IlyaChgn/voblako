@@ -1,0 +1,41 @@
+//protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative *.proto
+
+syntax = "proto3";
+
+package protobuf;
+option go_package = "auth_service/internal/pkg/auth/delivery/grpc/protobuf;protobuf";
+
+import "google/protobuf/empty.proto";
+
+service Auth {
+  rpc CreateUser(NewUser) returns (User);
+  rpc CreateSession(FullUserData) returns (google.protobuf.Empty);
+  rpc Logout(SessionData) returns (google.protobuf.Empty);
+  rpc GetUserByEmail(EmailData) returns (User);
+  rpc GetCurrentUser(SessionData) returns (User);
+}
+
+message NewUser {
+  string Email = 1;
+  string Password = 2;
+}
+
+message FullUserData {
+  User user = 1;
+  string SessionID = 2;
+}
+
+message User {
+  uint32 ID = 1;
+  string Email = 2;
+  string PasswordHash = 3;
+  bool IsAuth = 4;
+}
+
+message SessionData {
+  string SessionID = 1;
+}
+
+message EmailData {
+  string Email = 1;
+}
