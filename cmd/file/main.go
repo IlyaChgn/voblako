@@ -7,9 +7,10 @@ import (
 	"net"
 	"os"
 
-	mygrpc "github.com/IlyaChgn/voblako/internal/pkg/auth/delivery/grpc"
-	authproto "github.com/IlyaChgn/voblako/internal/pkg/auth/delivery/grpc/protobuf"
-	"github.com/IlyaChgn/voblako/internal/pkg/auth/repository"
+	mygrpc "github.com/IlyaChgn/voblako/internal/pkg/file/delivery/grpc"
+	fileproto "github.com/IlyaChgn/voblako/internal/pkg/file/delivery/grpc/protobuf"
+	metarepo "github.com/IlyaChgn/voblako/internal/pkg/file/repository/metadata"
+	objectrepo "github.com/IlyaChgn/voblako/internal/pkg/file/repository/object"
 
 	"github.com/joho/godotenv"
 
@@ -28,9 +29,9 @@ func main() {
 	cfgPath := os.Getenv("CONFIG_PATH")
 	generalCfg := config.ReadConfig(cfgPath)
 	if generalCfg == nil {
-		log.Fatalf("Something went wrong while opening config in auth service")
+		log.Fatalf("Something went wrong while opening config in file service")
 	}
-	cfg := generalCfg.Auth
+	cfg := generalCfg.File
 
 	postgresURL := dbinit.NewConnectionString(cfg.Postgres.Username, cfg.Postgres.Password,
 		cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DBName)
@@ -44,15 +45,15 @@ func main() {
 		log.Fatal("Cannot ping postgres database", err)
 	}
 
-	redisClient := dbinit.NewRedisClient(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password, cfg.Redis.DB)
-	err = redisClient.Ping(context.Background()).Err()
+	minioURL := dbinit.NewMinioEndpoint(cfg.Minio.Host, cfg.Minio.Port)
+	minioClient, err := dbinit.NewMinioClient(minioURL, cfg.Minio.AccessKey, cfg.Minio.SecretKey, cfg.Minio.Bucket)
 	if err != nil {
-		log.Fatal("Cannot ping Redis", err)
+		log.Fatal("Something went wrong while creating minio client", err)
 	}
 
-	authStorage := repository.NewAuthStorage(postgresPool)
-	sessionManager := repository.NewSessionManager(redisClient)
-	authManager := mygrpc.NewAuthManager(sessionManager, authStorage)
+	metadataStorage := metarepo.NewMetadataStorage(postgresPool)
+	objectStorage := objectrepo.NewObjectStorage(minioClient, cfg.Minio.Bucket)
+	fileManager := mygrpc.NewFileManager(metadataStorage, objectStorage)
 
 	grpcAddr := fmt.Sprintf("%s:%s", cfg.InternalHost, cfg.Port)
 	listener, err := net.Listen("tcp", grpcAddr)
@@ -61,9 +62,9 @@ func main() {
 	}
 
 	srv := grpc.NewServer()
-	authproto.RegisterAuthServer(srv, authManager)
+	fileproto.RegisterFileServer(srv, fileManager)
 
-	log.Printf("Starting Auth gRPC service on %s", grpcAddr)
+	log.Printf("Starting File gRPC service on %s", grpcAddr)
 
 	if err = srv.Serve(listener); err != nil {
 		log.Fatalf("gRPC Server failed to serve: %v", err)

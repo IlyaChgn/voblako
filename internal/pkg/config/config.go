@@ -20,9 +20,18 @@ type ServerConfig struct {
 type PostgresConfig struct {
 	Username string `env:"POSTGRES_USERNAME"`
 	Password string `env:"POSTGRES_PASSWORD"`
-	Host     string `env:"POSTGRES_HOST"`
-	Port     string `env:"POSTGRES_PORT"`
 	DBName   string `env:"POSTGRES_DB"`
+	Port     string `env:"POSTGRES_PORT"`
+}
+
+type PostgresAuthConfig struct {
+	PostgresConfig
+	Host string `env:"POSTGRES_AUTH_HOST"`
+}
+
+type PostgresFileConfig struct {
+	PostgresConfig
+	Host string `env:"POSTGRES_FILE_HOST"`
 }
 
 type RedisConfig struct {
@@ -32,18 +41,42 @@ type RedisConfig struct {
 	DB       int    `env:"REDIS_DB"`
 }
 
-type ServiceConfig struct {
+type MinioConfig struct {
+	Host      string `env:"MINIO_HOST"`
+	Port      string `env:"MINIO_API_PORT"`
+	AccessKey string `env:"MINIO_ROOT_USER"`
+	SecretKey string `env:"MINIO_ROOT_PASSWORD"`
+	Bucket    string `env:"MINIO_BUCKET"`
+}
+
+type AuthServiceConfig struct {
+	Postgres PostgresAuthConfig
+	Redis    RedisConfig
+
 	InternalHost string `yaml:"host"`
 	ExternalHost string `env:"AUTH_HOST"`
 	Port         string `env:"AUTH_PORT"`
 }
 
-type Config struct {
-	Server ServerConfig `yaml:"server"`
+type FileServiceConfig struct {
+	Postgres PostgresFileConfig
+	Minio    MinioConfig
 
-	Postgres PostgresConfig
-	Redis    RedisConfig
-	Auth     ServiceConfig `yaml:"auth_service"`
+	InternalHost string `yaml:"host"`
+	ExternalHost string `env:"FILE_HOST"`
+	Port         string `env:"FILE_PORT"`
+}
+
+type CtxKeys struct {
+	User string `yaml:"user"`
+}
+
+type Config struct {
+	Server ServerConfig      `yaml:"server"`
+	Auth   AuthServiceConfig `yaml:"auth_service"`
+	File   FileServiceConfig `yaml:"file_service"`
+
+	Keys CtxKeys `yaml:"ctx_keys"`
 }
 
 func ReadConfig(cfgPath string) *Config {

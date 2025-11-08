@@ -19,13 +19,13 @@ services:
     env_file:
       - .env
     depends_on:
-      postgres:
+      postgres_auth:
         condition: service_healthy
       redis:
         condition: service_healthy
 
-  postgres:
-    container_name: postgres
+  postgres_auth:
+    container_name: postgres_auth_service
     image: postgres:16.0-alpine3.18
     restart: always
     environment:
@@ -33,17 +33,17 @@ services:
       - POSTGRES_USER=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - ${POSTGRES_PORT}:5432
+      - ${POSTGRES_AUTH_PORT}:5432
     command:
       - "postgres"
       - "-c"
-      - "port=${POSTGRES_PORT}"
+      - "port=5432"
     volumes:
-      - postgres:/var/lib/postgresql/data
-      - ./init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_auth:/var/lib/postgresql/data
+      - ./init/auth.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD", "pg_isready" ]
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
@@ -63,12 +63,72 @@ services:
       - REDIS_DATABASES=${REDIS_DATABASES_NUM}
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 3
       start_period: 5s
 
+  minio:
+    container_name: minio
+    image: minio/minio:latest
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server --console-address ":9001" /data/
+    volumes:
+      - s3_data:/data
+    ports:
+      - ${MINIO_API_PORT}:9000
+      - ${MINIO_CONSOLE_PORT}:9001
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  postgres_file:
+    container_name: postgres_file_service
+    image: postgres:16.0-alpine3.18
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_FILE_PORT}:5432
+    command:
+      - "postgres"
+      - "-c"
+      - "port=5432"
+    volumes:
+      - postgres_file:/var/lib/postgresql/data
+      - ./init/file.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  file:
+    container_name: file
+    build:
+      context: .
+      dockerfile: build/file.Dockerfile
+    ports:
+      - ${FILE_PORT}:${FILE_PORT}
+    env_file:
+      - .env
+    depends_on:
+      postgres_file:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
 volumes:
-  postgres:
+  postgres_auth:
+  postgres_file:
   redis:
   redis_data:
+  s3_data:

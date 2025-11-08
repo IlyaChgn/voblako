@@ -1,0 +1,87 @@
+//protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative *.proto
+
+syntax = "proto3";
+
+package protobuf;
+option go_package = "github.com/IlyaChgn/voblako/internal/pkg/file/delivery/grpc/protobuf;protobuf";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service File {
+  rpc UploadFile(UploadFileRequest) returns (FileMetadata);
+  rpc GetFilesList(GetFilesListRequest) returns (GetFilesListResponse);
+  rpc GetFile(GetFileRequest) returns (GetFileResponse);
+  rpc GetFileMetadata(GetFileMetadataRequest) returns (FileMetadata);
+  rpc UpdateFile(UpdateFileRequest) returns (google.protobuf.Empty);
+  rpc UpdateFilename(UpdateFilenameRequest) returns (google.protobuf.Empty);
+  rpc DeleteFile(DeleteFileRequest) returns (google.protobuf.Empty);
+}
+
+message UploadFileRequest {
+  uint32 OwnerID = 1;
+  string Filename = 2;
+  bytes Data = 3;
+  string ContentType = 4;
+  int64 Size = 5;
+}
+
+message GetFilesListRequest {
+  uint32 OwnerID = 1;
+  uint32 Limit = 2;
+  uint32 Offset = 3;
+  bool WithDeleted = 4;
+}
+
+message GetFilesListResponse {
+  repeated FileMetadata files = 1;
+}
+
+message GetFileRequest {
+  string UUID = 1;
+  uint32 UserID = 2;
+}
+
+message GetFileResponse {
+  string Filename = 1;
+  string ContentType = 2;
+  bytes Data = 3;
+  int64 Size = 4;
+}
+
+message GetFileMetadataRequest {
+  string UUID = 1;
+  uint32 UserID = 2;
+}
+
+message FileMetadata {
+  string UUID = 1;
+  uint32 OwnerID = 2;
+  string Filename = 3;
+  string ContentType = 4;
+  int64 Size = 5;
+  string StorageKey = 6;
+  google.protobuf.Timestamp UploadTime = 7;
+  google.protobuf.Timestamp UpdateTime = 8;
+  google.protobuf.Timestamp DeletedTime = 9;
+  bool IsDeleted = 10;
+}
+
+message UpdateFileRequest {
+  string UUID = 1;
+  uint32 UserID = 2;
+  bytes Data = 3;
+  int64 Size = 4;
+}
+
+message UpdateFilenameRequest {
+  string UUID = 1;
+  uint32 UserID = 2;
+  string Filename = 3;
+}
+
+message DeleteFileRequest {
+  string UUID = 1;
+  uint32 UserID = 2;
+}
+

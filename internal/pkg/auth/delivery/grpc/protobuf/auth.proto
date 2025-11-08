@@ -3,7 +3,7 @@
 syntax = "proto3";
 
 package protobuf;
-option go_package = "auth_service/internal/pkg/auth/delivery/grpc/protobuf;protobuf";
+option go_package = "github.com/IlyaChgn/voblako/internal/pkg/auth/delivery/grpc/protobuf;protobuf";
 
 import "google/protobuf/empty.proto";
 

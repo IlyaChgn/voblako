@@ -11,6 +11,10 @@ import (
 	authdel "github.com/IlyaChgn/voblako/internal/pkg/auth/delivery/rest"
 	authuc "github.com/IlyaChgn/voblako/internal/pkg/auth/usecases"
 	"github.com/IlyaChgn/voblako/internal/pkg/config"
+	fileproto "github.com/IlyaChgn/voblako/internal/pkg/file/delivery/grpc/protobuf"
+	filedel "github.com/IlyaChgn/voblako/internal/pkg/file/delivery/rest"
+	fileuc "github.com/IlyaChgn/voblako/internal/pkg/file/usecases"
+	"github.com/IlyaChgn/voblako/internal/pkg/middleware/auth"
 	routers "github.com/IlyaChgn/voblako/internal/pkg/server/delivery"
 
 	"github.com/gorilla/handlers"
@@ -64,11 +68,24 @@ func (srv *Server) Run() error {
 	}
 	defer authConn.Close()
 
+	fileServiceURL := fmt.Sprintf("%s:%s", cfg.File.ExternalHost, cfg.File.Port)
+	fileConn, err := grpc.NewClient(fileServiceURL, opts)
+	if err != nil {
+		log.Fatal("Cannot create client for file service", err)
+	}
+	defer fileConn.Close()
+
 	authClient := authproto.NewAuthClient(authConn)
 	authUsecases := authuc.NewAuthUsecases(authClient)
 	authHandler := authdel.NewAuthHandler(authUsecases)
 
-	router := routers.NewRouter(authHandler)
+	fileClient := fileproto.NewFileClient(fileConn)
+	fileUsecases := fileuc.NewFileUsecases(fileClient)
+	fileHandler := filedel.NewFileHandler(fileUsecases, cfg.Keys.User)
+
+	loginRequiredMiddleware := auth.LoginRequiredMiddleware(authUsecases, cfg.Keys.User)
+
+	router := routers.NewRouter(authHandler, fileHandler, loginRequiredMiddleware)
 	muxWithCORS := handlers.CORS(credentials, originsOk, headersOk, methodsOk)(router)
 
 	serverURL := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
