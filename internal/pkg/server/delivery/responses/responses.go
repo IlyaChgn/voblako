@@ -11,21 +11,29 @@ const (
 
 	StatusBadRequest   = 400
 	StatusUnauthorized = 401
+	StatusForbidden    = 403
 
 	StatusInternalServerError = 500
 )
 
 const (
 	ErrInternalServer = "Server error"
-	ErrAuthorized     = "User already authorized"
+
+	ErrAuthorized    = "User already authorized"
+	ErrNotAuthorized = "User not authorized"
+	ErrForbidden     = "User have no access to this content"
 
 	ErrWrongPasswordFormat = "Password must have length between 8 and 32 symbols"
 	ErrDoNotMatch          = "Passwords do not match"
 	ErrWrongCredentials    = "Wrong credentials"
 	ErrAlreadyExists       = "User with this email already exists"
 
-	ErrBadJSON       = "Wrong JSON format"
-	ErrNotAuthorized = "User not authorized"
+	ErrWrongFilename = "Filename must have length between 1 and 50"
+
+	ErrBadJSON          = "Wrong JSON format"
+	ErrBadForm          = "Wrong form format"
+	ErrInvalidID        = "Invalid ID format"
+	ErrInvalidURLParams = "Invalid URL params"
 )
 
 type ErrResponse struct {

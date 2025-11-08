@@ -13,4 +13,8 @@ var (
 
 	UserNotExists     = errors.New("user does not exist")
 	UserAlreadyExists = errors.New("user already exists")
+
+	PermissionDeniedError = errors.New("permission denied")
+	InvalidInputError     = errors.New("invalid input")
+	InvalidFilenameError  = errors.New("invalid filename")
 )

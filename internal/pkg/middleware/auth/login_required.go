@@ -1,0 +1,37 @@
+package auth
+
+import (
+	"context"
+	"net/http"
+
+	authinterface "github.com/IlyaChgn/voblako/internal/pkg/auth"
+	"github.com/IlyaChgn/voblako/internal/pkg/server/delivery/responses"
+	"github.com/gorilla/mux"
+)
+
+func LoginRequiredMiddleware(uc authinterface.AuthUsecases, ctxUserKey string) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			session, _ := r.Cookie("session_id")
+			if session == nil {
+				responses.SendErrResponse(w, responses.StatusUnauthorized, responses.ErrNotAuthorized)
+
+				return
+			}
+
+			user, isAuth := uc.CheckAuth(ctx, session.Value)
+			if !isAuth {
+				responses.SendErrResponse(w, responses.StatusUnauthorized, responses.ErrNotAuthorized)
+
+				return
+			}
+
+			ctx = context.WithValue(ctx, ctxUserKey, user)
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}

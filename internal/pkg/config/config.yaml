@@ -14,3 +14,9 @@ server:
 
 auth_service:
     host:
+
+file_service:
+  host:
+
+ctx_keys:
+  user: user

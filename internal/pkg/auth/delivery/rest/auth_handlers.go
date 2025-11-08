@@ -8,17 +8,17 @@ import (
 	"time"
 
 	"github.com/IlyaChgn/voblako/internal/models"
-	authinterface "github.com/IlyaChgn/voblako/internal/pkg/auth"
+	authinterfaces "github.com/IlyaChgn/voblako/internal/pkg/auth"
 	"github.com/IlyaChgn/voblako/internal/pkg/server/delivery/responses"
 )
 
 const sessionDuration = 30 * 24 * time.Hour
 
 type AuthHandler struct {
-	usecases authinterface.AuthUsecases
+	usecases authinterfaces.AuthUsecases
 }
 
-func NewAuthHandler(usecases authinterface.AuthUsecases) *AuthHandler {
+func NewAuthHandler(usecases authinterfaces.AuthUsecases) *AuthHandler {
 	return &AuthHandler{usecases: usecases}
 }
 
@@ -113,11 +113,6 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	session, _ := r.Cookie("session_id")
-	if session == nil {
-		responses.SendErrResponse(w, responses.StatusUnauthorized, responses.ErrNotAuthorized)
-		return
-	}
-
 	err := h.usecases.Logout(ctx, session.Value)
 	if err != nil {
 		if errors.Is(err, models.SessionNotExistsError) {
