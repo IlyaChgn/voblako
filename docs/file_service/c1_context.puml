@@ -1,0 +1,19 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста системы для Voblako
+
+Person(user, "Пользователь", "Пользователь системы.")
+
+System(voblako, "Voblako", "Облачное хранилище файлов с аутентификацией.")
+
+SystemDb(db, "БД PostgreSQL", "PostgreSQL", "Хранит учетные записи и метаданные файлов.")
+SystemDb(redis, "БД Redis", "Redis", "Кэш в памяти для сессий.")
+SystemDb(minio, "БД Minio", "Minio", "S3-совместимое хранилище объектов.")
+
+Rel(user, voblako, "Использует", "HTTPS")
+Rel(voblako, db, "Читает и пишет")
+Rel(voblako, redis, "Читает и пишет")
+Rel(voblako, minio, "Читает и пишет")
+
+@enduml

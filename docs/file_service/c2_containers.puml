@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров для Voblako
+
+Person(user, "Пользователь", "Пользователь системы.")
+
+System_Boundary(c1, "Voblako") {
+    Container(main, "Главное приложение", "Go", "Основная точка входа в приложение.")
+    Container(auth, "Сервис аутентификации", "Go", "Обрабатывает аутентификацию пользователя.")
+    Container(file, "Файловый сервис", "Go", "Обрабатывает хранение и управление файлами.")
+
+    ContainerDb(postgres_auth, "БД Auth", "PostgreSQL", "Хранит учетные данные и сессии.")
+    ContainerDb(postgres_file, "БД File", "PostgreSQL", "Хранит метаданные файлов.")
+    ContainerDb(redis, "Redis", "Redis", "Кэширует сессии.")
+    Container(minio, "Minio", "S3", "Хранит файловые объекты.")
+}
+
+Rel(user, main, "Использует", "HTTPS")
+
+Rel(main, auth, "Аутентифицируется используя", "gRPC")
+Rel(main, file, "Управляет файлами используя", "gRPC")
+
+Rel(auth, postgres_auth, "Читает и пишет в", "TCP")
+Rel(auth, redis, "Читает и пишет в", "TCP")
+
+Rel(file, postgres_file, "Читает и пишет в", "TCP")
+Rel(file, minio, "Хранит и извлекает файлы из", "HTTPS")
+
+@enduml
