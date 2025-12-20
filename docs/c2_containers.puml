@@ -8,6 +8,10 @@ Person(user, "Пользователь", "Владелец аккаунта в V
 System_Boundary(c1, "Voblako") {
 
     Container(frontend, "Web Frontend", "React, Next.js", "Предоставляет веб-интерфейс пользователю.")
+
+    Container(api_gw, "API Gateway", "Go", "Единая точка входа. Маршрутизация, аутентификация, rate limit.")
+
+
     Container(auth, "Auth Service", "Go", "Обрабатывает аутентификацию и управление пользователями.")
     Container(file, "File Service", "Go", "Обрабатывает работу с файлами и метаданными.")
     Container(dir, "Directory Service", "Python", "Управляет структурой каталогов (проектируемый).")
@@ -19,15 +23,18 @@ System_Boundary(c1, "Voblako") {
     ContainerDb(minio, "MinIO", "S3", "Физическое хранение файлов.")
 }
 
-' Взаимодействия пользователя с фронтендом
+' Пользователь
 Rel(user, frontend, "Использует через браузер", "HTTPS")
 
-' Взаимодействия фронтенда с сервисами
-Rel(frontend, auth, "Логин / регистрация", "gRPC")
-Rel(frontend, file, "Работа с файлами", "gRPC")
-Rel(frontend, dir, "Работа с каталогами", "gRPC")
+' Frontend → API Gateway
+Rel(frontend, api_gw, "API-запросы", "HTTPS")
 
-' Взаимодействия сервисов с базами данных
+' API Gateway → сервисы
+Rel(api_gw, auth, "Логин / регистрация", "gRPC")
+Rel(api_gw, file, "Работа с файлами", "gRPC")
+Rel(api_gw, dir, "Работа с каталогами", "gRPC")
+
+' Сервисы → БД
 Rel(auth, redis, "Читает и пишет сессии", "TCP")
 Rel(auth, postgres_auth, "Читает и пишет пользователей", "TCP")
 

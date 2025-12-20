@@ -13,7 +13,7 @@ System_Boundary(c2, "Внутренние компоненты Файловог�
 }
 
 ContainerDb(postgres_file, "БД File", "PostgreSQL", "Хранит метаданные файлов.")
-Container(minio, "Minio", "S3", "Хранит файловые объекты.")
+ContainerDb(minio, "Minio", "S3", "Хранит файловые объекты.")
 
 Rel(grpc, file_manager, "Использует")
 Rel(file_manager, metadata_storage, "Использует")
