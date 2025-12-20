@@ -1,0 +1,40 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров для Voblako
+
+Person(user, "Пользователь", "Владелец аккаунта в VOblako, использует веб-интерфейс.")
+
+System_Boundary(c1, "Voblako") {
+
+    Container(frontend, "Web Frontend", "React, Next.js", "Предоставляет веб-интерфейс пользователю.")
+    Container(auth, "Auth Service", "Go", "Обрабатывает аутентификацию и управление пользователями.")
+    Container(file, "File Service", "Go", "Обрабатывает работу с файлами и метаданными.")
+    Container(dir, "Directory Service", "Python", "Управляет структурой каталогов (проектируемый).")
+
+    ContainerDb(redis, "Redis", "Redis", "Хранение сессий.")
+    ContainerDb(postgres_auth, "PostgreSQL Auth", "PostgreSQL", "Хранит пользователей и учетные данные.")
+    ContainerDb(postgres_file, "PostgreSQL File", "PostgreSQL", "Хранит метаданные файлов.")
+    ContainerDb(mongo, "MongoDB", "MongoDB", "Хранит структуру каталогов.")
+    ContainerDb(minio, "MinIO", "S3", "Физическое хранение файлов.")
+}
+
+' Взаимодействия пользователя с фронтендом
+Rel(user, frontend, "Использует через браузер", "HTTPS")
+
+' Взаимодействия фронтенда с сервисами
+Rel(frontend, auth, "Логин / регистрация", "gRPC")
+Rel(frontend, file, "Работа с файлами", "gRPC")
+Rel(frontend, dir, "Работа с каталогами", "gRPC")
+
+' Взаимодействия сервисов с базами данных
+Rel(auth, redis, "Читает и пишет сессии", "TCP")
+Rel(auth, postgres_auth, "Читает и пишет пользователей", "TCP")
+
+Rel(file, postgres_file, "Читает и пишет метаданные файлов", "TCP")
+Rel(file, minio, "Хранит и извлекает файлы", "HTTPS")
+
+Rel(dir, mongo, "Читает и пишет структуру каталогов", "TCP")
+Rel(dir, file, "Связь каталог ↔ файл", "gRPC")
+
+@enduml
