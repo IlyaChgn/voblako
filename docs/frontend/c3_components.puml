@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Компоненты BFF Фронтенда
+
+Person(user, "Пользователь", "Браузер, отправляющий форму входа и получающий cookies")
+
+System_Boundary(bff, "BFF ВОблако", "Next.js (App Router, SSR)", "Серверный рендеринг страниц и API-маршруты, работающие как прокси") {
+    Component(route_login, "Route Handler /api", "TypeScript / Next.js API Route", "Обрабатывает HTTP-запросы и перенаправляет их в бэкенд через BFF")
+    Component(remote_proxy, "Remote API Proxy", "TypeScript fetch", "Форвардит HTTP-запрос к удалённому API, удаляя hop-by-hop заголовки")
+    Component(session_utils, "Session Cookie Utils", "TypeScript", "Пробрасывает/очищает session cookies на ответе")
+    Component(api_config, "API Target Config", "TypeScript", "Читает env, определяет remote target и базовый URL")
+    Component(ssr_renderer, "SSR Renderer", "React/Next.js", "Отдаёт HTML-страницы клиенту, используя данные core-бэкенда")
+}
+
+System_Ext(remote_api, "API Gateway", "HTTP", "Единая точка доступа для core-бэкенда")
+
+Rel(user, route_login, "REST /api (JSON + cookies)")
+Rel(user, ssr_renderer, "GET / (HTML, assets)")
+Rel(route_login, remote_proxy, "forwardToRemoteApi(request)")
+Rel(remote_proxy, api_config, "isRemoteApiEnabled, buildRemoteApiUrl")
+Rel(remote_proxy, remote_api, "HTTP proxy", "fetch")
+Rel(route_login, session_utils, "Проставляет Set-Cookie из ответа")
+Rel(route_login, user, "Response/ErrorResponse + Set-Cookie", "HTTP 200/4xx")
+
+@enduml
