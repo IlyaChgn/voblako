@@ -33,3 +33,15 @@
 ![img_3.png](img_3.png)
 
 ## Инструкция по запуску
+1. Локальный запуск
+```bash
+go run cmd/file_service/main.go
+```
+2. Запуск в контейнере
+```bash
+docker compose up -d
+```
+3. Запуск тестов
+```bash
+go test ./...
+```
