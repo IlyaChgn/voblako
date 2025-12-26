@@ -68,7 +68,7 @@ func (m *FileManager) GetFile(ctx context.Context, r *protobuf.GetFileRequest) (
 	if err != nil {
 		return nil, err
 	} else if meta == nil || meta.OwnerID != uint(r.UserID) {
-		return nil, status.Errorf(codes.PermissionDenied, models.PermissionDeniedError.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "%s", models.PermissionDeniedError.Error())
 	}
 
 	file, err := m.objectStorage.GetFile(ctx, meta.StorageKey)
@@ -91,7 +91,7 @@ func (m *FileManager) GetFileMetadata(
 	if err != nil {
 		return nil, err
 	} else if meta == nil || meta.OwnerID != uint(r.UserID) {
-		return nil, status.Errorf(codes.PermissionDenied, models.PermissionDeniedError.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "%s", models.PermissionDeniedError.Error())
 	}
 
 	return convertMetadata(meta), nil
@@ -104,7 +104,7 @@ func (m *FileManager) UpdateFile(
 	if err != nil {
 		return nil, err
 	} else if meta == nil || meta.OwnerID != uint(r.UserID) {
-		return nil, status.Errorf(codes.PermissionDenied, models.PermissionDeniedError.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "%s", models.PermissionDeniedError.Error())
 	}
 
 	err = m.objectStorage.UploadFile(ctx, meta.StorageKey, meta.ContentType, r.Data, r.Size)
@@ -125,7 +125,7 @@ func (m *FileManager) UpdateFilename(ctx context.Context, r *protobuf.UpdateFile
 	if err != nil {
 		return nil, err
 	} else if meta == nil || meta.OwnerID != uint(r.UserID) {
-		return nil, status.Errorf(codes.PermissionDenied, models.PermissionDeniedError.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "%s", models.PermissionDeniedError.Error())
 	}
 
 	err = m.metadataStorage.UpdateFilename(ctx, r.UUID, r.Filename)
@@ -141,7 +141,7 @@ func (m *FileManager) DeleteFile(ctx context.Context, r *protobuf.DeleteFileRequ
 	if err != nil {
 		return nil, err
 	} else if meta == nil || meta.OwnerID != uint(r.UserID) {
-		return nil, status.Errorf(codes.PermissionDenied, models.PermissionDeniedError.Error())
+		return nil, status.Errorf(codes.PermissionDenied, "%s", models.PermissionDeniedError.Error())
 	}
 
 	err = m.metadataStorage.DeleteFile(ctx, r.UUID)
