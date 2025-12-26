@@ -33,7 +33,7 @@ func (m *AuthManager) CreateUser(ctx context.Context, newUser *protobuf.NewUser)
 	user, err := m.authStorage.CreateUser(ctx, newUser.Email, newUser.Password)
 	if err != nil {
 		if errors.Is(err, models.UserAlreadyExists) {
-			return nil, status.Errorf(codes.AlreadyExists, err.Error())
+			return nil, status.Errorf(codes.AlreadyExists, "%s", err.Error())
 		}
 
 		return nil, err
@@ -53,7 +53,7 @@ func (m *AuthManager) Logout(ctx context.Context, session *protobuf.SessionData)
 	err := m.sessionManager.RemoveSession(ctx, session.SessionID)
 	if err != nil {
 		if errors.Is(err, models.SessionNotExistsError) {
-			return nil, status.Errorf(codes.AlreadyExists, err.Error())
+			return nil, status.Errorf(codes.AlreadyExists, "%s", err.Error())
 		}
 
 		return nil, err
