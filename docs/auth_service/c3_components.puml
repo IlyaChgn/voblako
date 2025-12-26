@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов для Сервиса аутентификации (Voblako)
+
+Container(auth, "Сервис аутентификации", "Go", "Обрабатывает аутентификацию и управление пользователями.")
+
+System_Boundary(c2, "Внутренние компоненты Сервиса аутентификации") {
+
+    Component(handler, "REST / gRPC обработчик", "Go", "Принимает запросы логина и регистрации.")
+    Component(auth_logic, "Бизнес-логика аутентификации", "Go", "Реализует проверку учетных данных и управление сессиями.")
+    Component(session_manager, "Менеджер сессий", "Go", "Управление stateful-сессиями пользователей.")
+    Component(user_storage, "Хранилище пользователей", "Go", "Работает с данными пользователей в базе.")
+}
+
+ContainerDb(redis, "Redis", "Redis", "Хранение сессий пользователей.")
+ContainerDb(postgres_auth, "БД пользователей", "PostgreSQL", "Хранение учетных записей пользователей.")
+
+' Взаимодействия между компонентами
+Rel(handler, auth_logic, "Вызывает")
+Rel(auth_logic, session_manager, "Создает и проверяет сессии")
+Rel(auth_logic, user_storage, "Читает и пишет данные пользователей")
+
+Rel(session_manager, redis, "Читает и пишет сессии", "TCP")
+Rel(user_storage, postgres_auth, "Читает и пишет пользователей", "TCP")
+
+@enduml

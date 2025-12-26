@@ -1,0 +1,61 @@
+@startuml
+title Подробная диаграмма кода для Файлового сервиса
+
+skinparam class {
+    BackgroundColor #F2F2F2
+    BorderColor #707070
+}
+skinparam package {
+    BorderColor #707070
+}
+
+package "delivery/grpc" {
+    class FileManager {
+        - metadataStorage: MetadataStorage
+        - objectStorage: ObjectStorage
+        + UploadFile(ctx context.Context, r *protobuf.UploadFileRequest) (*protobuf.FileMetadata, error)
+        + GetFilesList(ctx context.Context, r *protobuf.GetFilesListRequest) (*protobuf.GetFilesListResponse, error)
+        + GetFile(ctx context.Context, r *protobuf.GetFileRequest) (*protobuf.GetFileResponse, error)
+        + GetFileMetadata(ctx context.Context, r *protobuf.GetFileMetadataRequest) (*protobuf.FileMetadata, error)
+        + UpdateFile(ctx context.Context, r *protobuf.UpdateFileRequest) (*emptypb.Empty, error)
+        + UpdateFilename(ctx context.Context, r *protobuf.UpdateFilenameRequest) (*emptypb.Empty, error)
+        + DeleteFile(ctx context.Context, r *protobuf.DeleteFileRequest) (*emptypb.Empty, error)
+    }
+}
+
+package "usecases" {
+    class fileUsecases {
+        - client: protobuf.FileClient
+        + UploadFile(ctx context.Context, ownerID uint, data *models.GeneralFileData) (*models.FileMetadata, error)
+        + GetFilesList(ctx context.Context, ownerID uint, options models.FilesListOptions) ([]*models.FileMetadata, error)
+        + GetFile(ctx context.Context, userID uint, id string) (*models.GeneralFileData, error)
+        + GetMetadata(ctx context.Context, userID uint, id string) (*models.FileMetadata, error)
+        + UpdateFile(ctx context.Context, userID uint, id string, file []byte, size int64) error
+        + UpdateFilename(ctx context.Context, userID uint, id string, filename string) error
+        + DeleteFile(ctx context.Context, userID uint, id string) error
+    }
+}
+
+package "repository" {
+    class metadataStorage {
+        - pool: dbinit.PostgresPool
+        + GetFilesList(ctx context.Context, ownerID uint, options models.FilesListOptions) ([]*models.FileMetadata, error)
+        + GetMetadata(ctx context.Context, id string) (*models.FileMetadata, error)
+        + UploadMetadata(ctx context.Context, ownerID uint, filename, contentType string, size int64) (*models.FileMetadata, error)
+        + UpdateFilename(ctx context.Context, id string, filename string) error
+        + UpdateSize(ctx context.Context, id string, size int64) error
+        + DeleteFile(ctx context.Context, id string) error
+    }
+    class objectStorage {
+        - bucketName: string
+        - client: *minio.Client
+        + UploadFile(ctx context.Context, key, contentType string, file []byte, size int64) error
+        + GetFile(ctx context.Context, key string) ([]byte, error)
+    }
+}
+
+FileManager ..> fileUsecases : использует
+fileUsecases ..> metadataStorage : использует
+fileUsecases ..> objectStorage : использует
+
+@enduml

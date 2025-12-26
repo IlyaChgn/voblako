@@ -1,0 +1,99 @@
+@startuml
+title Структура кода /api (BFF Next.js)
+
+skinparam class {
+    BackgroundColor #F2F2F2
+    BorderColor #707070
+}
+skinparam package {
+    BorderColor #707070
+}
+
+package "Service: Auth\n(app/api/auth)" {
+    class AuthLoginRoutes {
+        + POST(request: NextRequest): Promise<NextResponse>
+        - parseLoginBody(request: NextRequest): Promise<LoginRequest | null>
+    }
+    class AuthSignupRoutes {
+        + POST(request: NextRequest): Promise<NextResponse>
+        - parseSignupBody(request: NextRequest): Promise<SignupRequest | null>
+    }
+    class AuthLogoutRoutes {
+        + POST(request: NextRequest): Promise<NextResponse>
+    }
+    class AuthCheckRoutes {
+        + GET(request: NextRequest): Promise<NextResponse>
+    }
+}
+
+package "Service: Files\n(app/api/files)" {
+    class FilesRootRoutes {
+        + POST(request: NextRequest): Promise<NextResponse>
+    }
+    class FilesListRoutes {
+        + POST(request: NextRequest): Promise<NextResponse>
+    }
+    class FilesItemRoutes {
+        + GET(request: NextRequest, context: RouteContext): Promise<NextResponse>
+        + POST(request: NextRequest, context: RouteContext): Promise<NextResponse>
+        + DELETE(request: NextRequest, context: RouteContext): Promise<NextResponse>
+    }
+}
+
+package "Service: Storage\n(app/api/storage)" {
+    class StorageRoutes {
+        + GET(request: NextRequest): Promise<NextResponse>
+        + POST(request: NextRequest): Promise<NextResponse>
+        + DELETE(request: NextRequest): Promise<NextResponse>
+    }
+}
+
+package "app/api/utils" {
+    class RemoteProxy {
+        + forwardToRemoteApi(request: NextRequest, overridePath?): Promise<NextResponse>
+        - buildForwardHeaders(request: NextRequest): Headers
+        - applyResponseHeaders(source: Headers, target: NextResponse)
+    }
+}
+
+package "app/config" {
+    class ApiTargetConfig {
+        + isRemoteApiEnabled(): boolean
+        + buildRemoteApiUrl(path?): string
+        - apiConfig: ApiConfig
+    }
+}
+
+package "next/server" {
+    class NextRequest
+    class NextResponse
+}
+
+AuthLoginRoutes ..> RemoteProxy : использует\nforwardToRemoteApi()
+AuthSignupRoutes ..> RemoteProxy : использует
+AuthLogoutRoutes ..> RemoteProxy : использует
+AuthCheckRoutes ..> RemoteProxy : использует
+FilesRootRoutes ..> RemoteProxy : использует
+FilesListRoutes ..> RemoteProxy : использует
+FilesItemRoutes ..> RemoteProxy : использует
+StorageRoutes ..> RemoteProxy : использует
+RemoteProxy ..> ApiTargetConfig : использует\nisRemoteApiEnabled(), buildRemoteApiUrl()
+AuthLoginRoutes ..> NextRequest : принимает
+AuthSignupRoutes ..> NextRequest : принимает
+AuthLogoutRoutes ..> NextRequest : принимает
+AuthCheckRoutes ..> NextRequest : принимает
+FilesRootRoutes ..> NextRequest : принимает
+FilesListRoutes ..> NextRequest : принимает
+FilesItemRoutes ..> NextRequest : принимает
+StorageRoutes ..> NextRequest : принимает
+AuthLoginRoutes ..> NextResponse : возвращает/модифицирует
+AuthSignupRoutes ..> NextResponse : возвращает/модифицирует
+AuthLogoutRoutes ..> NextResponse : возвращает/модифицирует
+AuthCheckRoutes ..> NextResponse : возвращает/модифицирует
+FilesRootRoutes ..> NextResponse : возвращает/модифицирует
+FilesListRoutes ..> NextResponse : возвращает/модифицирует
+FilesItemRoutes ..> NextResponse : возвращает/модифицирует
+StorageRoutes ..> NextResponse : возвращает/модифицирует
+RemoteProxy ..> NextResponse : создает ответ
+
+@enduml

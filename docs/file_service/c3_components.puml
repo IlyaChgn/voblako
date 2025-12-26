@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов для Файлового сервиса
+
+Container(file, "Файловый сервис", "Go", "Обрабатывает хранение и управление файлами.")
+
+System_Boundary(c2, "Внутренние компоненты Файлового сервиса") {
+    Component(grpc, "gRPC Сервер", "gRPC", "Предоставляет функциональность управления файлами через gRPC.")
+    Component(file_manager, "Менеджер файлов", "Go", "Реализует логику управления файлами.")
+    Component(metadata_storage, "Хранилище метаданных", "Go", "Управляет метаданными файлов в PostgreSQL.")
+    Component(object_storage, "Хранилище объектов", "Go", "Управляет объектами файлов в Minio.")
+}
+
+ContainerDb(postgres_file, "БД File", "PostgreSQL", "Хранит метаданные файлов.")
+ContainerDb(minio, "Minio", "S3", "Хранит файловые объекты.")
+
+Rel(grpc, file_manager, "Использует")
+Rel(file_manager, metadata_storage, "Использует")
+Rel(file_manager, object_storage, "Использует")
+
+Rel(metadata_storage, postgres_file, "Читает и пишет в", "TCP")
+Rel(object_storage, minio, "Хранит и извлекает файлы из", "HTTPS")
+
+@enduml

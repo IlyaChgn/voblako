@@ -1,0 +1,52 @@
+@startuml
+title Подробная диаграмма кода для Auth Service
+
+skinparam class {
+    BackgroundColor #F2F2F2
+    BorderColor #707070
+}
+skinparam package {
+    BorderColor #707070
+}
+
+package "delivery/grpc" {
+    class AuthHandler {
+        - authUsecase: AuthUsecase
+        + Login(ctx context.Context, r *protobuf.LoginRequest) (*protobuf.LoginResponse, error)
+        + Register(ctx context.Context, r *protobuf.RegisterRequest) (*protobuf.RegisterResponse, error)
+        + Logout(ctx context.Context, r *protobuf.LogoutRequest) (*emptypb.Empty, error)
+        + CheckSession(ctx context.Context, r *protobuf.CheckSessionRequest) (*protobuf.CheckSessionResponse, error)
+    }
+}
+
+package "usecases" {
+    class AuthUsecase {
+        - userRepo: UserRepository
+        - sessionManager: SessionManager
+        + Login(ctx context.Context, email string, password string) (string, error)
+        + Register(ctx context.Context, email string, password string) (string, error)
+        + Logout(ctx context.Context, sessionID string) error
+        + CheckSession(ctx context.Context, sessionID string) (bool, error)
+    }
+}
+
+package "repository" {
+    class UserRepository {
+        - pool: dbinit.PostgresPool
+        + GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+        + CreateUser(ctx context.Context, user *models.User) error
+    }
+    class SessionManager {
+        - client: redis.Client
+        + CreateSession(ctx context.Context, userID string) (string, error)
+        + ValidateSession(ctx context.Context, sessionID string) (bool, error)
+        + DeleteSession(ctx context.Context, sessionID string) error
+    }
+}
+
+' Взаимодействия между компонентами
+AuthHandler ..> AuthUsecase : использует
+AuthUsecase ..> UserRepository : использует
+AuthUsecase ..> SessionManager : использует
+
+@enduml

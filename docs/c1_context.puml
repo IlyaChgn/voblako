@@ -1,0 +1,16 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста системы Voblako
+
+Person(user, "Пользователь", "Владелец аккаунта")
+
+System(voblako, "Voblako", "Облачное хранилище")
+
+System_Ext(email, "Email Service", "Опциональный внешний сервис")
+
+Rel(user, voblako, "Использует", "HTTPS")
+Rel_R(voblako, email, "Формирует рассылку")
+Rel_L(email, user, "Отправляет email")
+
+@enduml
